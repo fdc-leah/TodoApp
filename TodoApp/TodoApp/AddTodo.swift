@@ -13,14 +13,17 @@ class AddTodo: UIViewController, UITextViewDelegate {
     @IBOutlet weak var todoTextField: UITextField!
     @IBOutlet weak var todoDesc: UITextView!
     @IBOutlet weak var doneButton: UIBarButtonItem!
+    @IBOutlet weak var bottomConstraints: UITextView!
     var editFlag = false
     var isTaskDone = false
-    
+    var keyboardHeight: CGFloat = 0.0;
     override func viewDidLoad() {
         super.viewDidLoad()
         
         // Do any additional setup after loading the view.
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(with:)), name: .UIKeyboardWillShow, object: nil)
+        let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(DismissKeyboard))
+        view.addGestureRecognizer(tap)
         
         configureTodoDescTextView()
         
@@ -63,17 +66,6 @@ class AddTodo: UIViewController, UITextViewDelegate {
     }
     // MARK: Actions
     
-    @objc func keyboardWillShow(with notification: Notification){
-        
-        // Animate the churva
-        UIView.animate(withDuration: 0.3) {
-            
-            // This'll gonna reset the constraint after changing the constant of constraint.
-            self.view.layoutIfNeeded()
-        }
-        
-    }
-    
     func funcForEdit() {
         
         // Get the Todo object from the list and decode it.
@@ -85,6 +77,15 @@ class AddTodo: UIViewController, UITextViewDelegate {
             editFlag = true
         }else{
             editFlag = false
+        }
+        
+        adjustFrames()
+    }
+    
+    func textViewDidEndEditing(_ textView: UITextView) {
+        if todoDesc.text.isEmpty{
+            todoDesc.text = "Task description here..."
+            todoDesc.textColor = UIColor.lightGray
         }
     }
     
@@ -103,11 +104,48 @@ class AddTodo: UIViewController, UITextViewDelegate {
         }
     }
     
-    
+    func textViewDidChange(_ textView: UITextView) {
+        if textView.contentSize.height <= 300
+        {
+            adjustFrames()
+        }
+    }
+    func adjustFrames() {
+        
+        var newFrame = todoDesc.frame
+        
+        let fixedWidth = todoDesc.frame.size.width
+        let newSize = todoDesc.sizeThatFits(CGSize(width: fixedWidth, height: view.bounds.size.height - keyboardHeight))
+        
+        newFrame.size = CGSize(width: max(newSize.width, fixedWidth), height: newSize.height)
+        self.todoDesc.frame = newFrame
+        
+    }
     func configureTodoDescTextView() {
         todoDesc!.layer.borderWidth = 1
         todoDesc!.layer.cornerRadius = 5.0
         todoDesc!.layer.borderColor = UIColor.lightGray.cgColor
         todoDesc.delegate = self
+    }
+    
+    @objc func keyboardWillShow(with notification: Notification) {
+        
+         guard  let keyboardFrame = notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue else { return }
+        
+            let keyboardRectangle = keyboardFrame.cgRectValue
+            keyboardHeight = keyboardRectangle.height
+            
+            UIView.animate(withDuration: 0.3) {
+                
+                // This'll gonna reset the constraint after changing the constant of constraint.
+                self.view.layoutIfNeeded()
+            }
+    }
+    
+    
+    
+    @objc func DismissKeyboard(){
+        //Causes the view to resign from the status of first responder.
+        view.endEditing(true)
     }
 }

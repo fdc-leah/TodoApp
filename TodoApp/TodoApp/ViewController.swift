@@ -21,6 +21,7 @@ var todoIndex = -1
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
 
     @IBOutlet weak var todoTbl: UITableView!
+    @IBOutlet var noItemView: UIView!
     override func viewDidLoad() {
         super.viewDidLoad()
        
@@ -34,6 +35,8 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             }
         }
         
+        todoTbl.backgroundView = noItemView
+        self.todoTbl.tableFooterView = UIView()
         todoTbl.reloadData();
     }
 
